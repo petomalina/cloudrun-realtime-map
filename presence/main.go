@@ -120,7 +120,7 @@ func (s *service) pingHandler(c *gin.Context) {
 
 	doc := s.fs.Collection("markers").Doc(ipHash)
 
-	color := "#" //+ c.Query("color")
+	color := "#" + c.Query("color")
 	if color == "#" {
 		color += "005aff"
 	}
