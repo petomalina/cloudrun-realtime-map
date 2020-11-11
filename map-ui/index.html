@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Simple Map</title>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
+    <script
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBNnjvzbXYSRffIaZtxUKp4ZnzUBb0CKn0&callback=init&libraries=&v=weekly"
+        defer></script>
+
+    <script src="https://www.gstatic.com/firebasejs/8.0.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.0.1/firebase-firestore.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.0/axios.min.js"></script>
+    <style type="text/css">
+        /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+        #map {
+            height: 100%;
+        }
+
+        /* Optional: Makes the sample page fill the window. */
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBNnjvzbXYSRffIaZtxUKp4ZnzUBb0CKn0",
+            authDomain: "petermalina.firebaseapp.com",
+            databaseURL: "https://petermalina.firebaseio.com",
+            projectId: "petermalina",
+            storageBucket: "petermalina.appspot.com",
+            messagingSenderId: "751138294465",
+            appId: "1:751138294465:web:12cffa142f12ee2c34a240",
+            measurementId: "G-L88F7TGB7N"
+        };
+
+        function updatePresence(url) {
+            url = !window.tag ? url : url.replace(/\:\/\//, '://' + window.tag);
+            axios.get(url + (window.color ? '?color=' + window.color : ''));
+        }
+
+        let map;
+        function init() {
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: { lat: 49.8037633, lng: 15.4749126 },
+                zoom: 8,
+            });
+
+            firebase.initializeApp(firebaseConfig);
+            let db = firebase.firestore();
+
+            let pingInterval;
+            db.collection("config").doc("current")
+                .onSnapshot(function (doc) {
+                    console.log('New config initialized: ' + JSON.stringify(doc.data()));
+                    clearInterval(pingInterval);
+
+                    presenceUrl = doc.data().presenceUrl;
+                    // don't set the interval if we don't have the url
+                    if (!presenceUrl) {
+                        return;
+                    }
+
+                    pingInterval = setInterval(function () {
+                        updatePresence(doc.data().presenceUrl);
+                    }, 15000);
+
+                    updatePresence(doc.data().presenceUrl);
+                });
+
+            // all markers on the map
+            markers = {};
+
+            db.collection("markers").onSnapshot(function (snap) {
+                snap.docChanges().forEach(function (change) {
+                    let data = change.doc.data();
+                    let doc = change.doc;
+                    console.log('An event [' + change.type + '] appeared for a marker: ' + doc.id);
+
+                    if (change.type === "added") {
+                        markers[doc.id] = new google.maps.Marker({
+                            position: {lat: data.lat, lng: data.lng},
+                            map,
+                        });
+                    }
+                    if (change.type === "modified") {
+                    }
+                    if (change.type === "removed") {
+                    }
+                });
+            });
+        }
+    </script>
+</head>
+
+<body>
+    <div id="map"></div>
+</body>
+
+</html>
