@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 
@@ -46,6 +47,7 @@ func (s *service) locateHandler(c *gin.Context) {
 	}
 
 	if _, ok := cache[ip]; !ok {
+		fmt.Println("An ip was not cached, looking into ipstack")
 		resp, err := s.h.R().Get("http://api.ipstack.com/" + ip + "?access_key=" + os.Getenv("IPSTACK_KEY"))
 		if err != nil {
 			c.String(http.StatusInternalServerError, "An error occurred when calling ipstack: "+err.Error())

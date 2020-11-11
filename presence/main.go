@@ -120,17 +120,19 @@ func (s *service) pingHandler(c *gin.Context) {
 
 	doc := s.fs.Collection("markers").Doc(ipHash)
 
-	snap, _ := doc.Get(c.Request.Context())
-	if !snap.Exists() {
-		doc.Set(
-			c.Request.Context(),
-			map[string]interface{}{
-				"lat": respStruct.Lat,
-				"lng": respStruct.Lng,
-				"t":   time.Now(),
-			},
-		)
+	color := "#" //+ c.Query("color")
+	if color == "#" {
+		color += "005aff"
 	}
+	doc.Set(
+		c.Request.Context(),
+		map[string]interface{}{
+			"lat":   respStruct.Lat,
+			"lng":   respStruct.Lng,
+			"color": string(color[:7]),
+			"t":     time.Now(),
+		},
+	)
 
 	c.JSON(200, gin.H{
 		"message": "pong",

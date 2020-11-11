@@ -39,8 +39,10 @@
         };
 
         function updatePresence(url) {
-            url = !window.tag ? url : url.replace(/\:\/\//, '://' + window.tag);
-            axios.get(url + (window.color ? '?color=' + window.color : ''));
+            url = !window.tag ? url : url.replace(/\:\/\//, '://' + window.tag + '---');
+
+            let params = window.color ? { params: { color: window.color } }: {};
+            axios.get(url, params);
         }
 
         let map;
@@ -81,15 +83,28 @@
                     let doc = change.doc;
                     console.log('An event [' + change.type + '] appeared for a marker: ' + doc.id);
 
+                    var icon = {
+                        path: "M-20,0a20,20 0 1,0 40,0a20,20 0 1,0 -40,0",
+                        fillColor: data.color || '#FF0000',
+                        fillOpacity: .7,
+                        anchor: new google.maps.Point(0,0),
+                        strokeWeight: 0,
+                        scale: 1
+                    }
+
                     if (change.type === "added") {
                         markers[doc.id] = new google.maps.Marker({
                             position: {lat: data.lat, lng: data.lng},
                             map,
+                            icon: icon
                         });
                     }
                     if (change.type === "modified") {
+                        markers[doc.id].setIcon(icon);
                     }
                     if (change.type === "removed") {
+                        markers[doc.id].setMap(null);
+                        delete markers[doc.id];
                     }
                 });
             });
